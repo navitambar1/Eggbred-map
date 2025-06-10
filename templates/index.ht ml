@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eggbred Franchise Central</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script  src="https://code.jquery.com/jquery-3.7.1.js"  crossorigin="anonymous"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCmxt9MdmhDOTDpVz3xLriP_uIe8bCTApc&v=3.59&loading=async&map_ids=ade4782d096b4576&libraries=places" async defer></script>
+    <!-- &libraries=places -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .loader-container {
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pulse-loader {
+            width: 100%;
+            height: auto;
+            animation: pulseOpacity 2s infinite ease-in-out;
+        }
+        
+        @keyframes pulseOpacity {
+            0%, 100% {
+                opacity: 0.2;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+        .navbar-yellow {
+            background-color: #ffd700;
+            padding: 0;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            margin-right: 0;
+        }
+        .navbar-brand img {
+            max-height: 50px;
+            margin-right: 10px;
+        }
+        .offcanvas {
+            background-color: #f8f9fa;
+        }
+        .btn-sidebar {
+            width: 100%;
+            text-align: left;
+            margin-bottom: 5px;
+        }
+        #map-container {
+            position: relative;
+            padding-bottom: 75%; 
+            height: 0;
+            overflow: hidden;
+        }
+        @media (max-width: 768px) {
+            #map-container {
+                height: 100vh;
+            }
+        }
+        .navbar-controls {
+            display: flex;
+            align-items: center;
+        }
+        .navbar-controls .btn {
+            padding: 8px;
+            margin: 0 2px;
+        }
+        #demographic-table,
+        #demographic-table-mob {
+            padding: 0;
+            margin-top: 20px;
+        }
+        .table th,
+        .table td {
+            text-align: left;
+            vertical-align: middle;
+        }
+        #demographic-table button,
+        #demographic-table-mob button {
+            width: 100%;
+            margin-top: 5px;
+        }
+        .pac-container {
+            z-index: 1060 !important;  /* Higher than Bootstrap modals */
+            position: fixed !important; /* This can help with positioning issues */
+        }
+        #delet-area{
+            z-index: 99999;
+        }
+        /* Make the dropdown more visible on mobile */
+        @media (max-width: 768px) {
+            .pac-container {
+                width: 90% !important;
+                left: 5% !important;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loader-wrapper" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 9999;">
+        <div class="d-flex justify-content-center align-items-center" style="height: 100%">
+            <div class="loader-container">
+                <img src="/static/img/loaderImg.png" alt="Loader" class="pulse-loader">
+            </div>            
+        </div>
+    </div>
+    <nav class="navbar navbar-expand-lg navbar-yellow" style="background-color: #FFD900;">
+        <div class="container-fluid">
+            <!-- Left Side Icons and Mobile Menu Button -->
+            <div class="d-flex align-items-center">
+                <button class="btn btn-outline-secondary d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#leftSidebarOffcanvas" aria-controls="leftSidebarOffcanvas">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <!-- Removed the d-none d-lg-inline classes from buttons that should be visible on mobile -->
+                <button id="mnu-layer-control" class="btn btn-outline-secondary me-2" data-bs-toggle="tooltip" title="Layer Control">
+                    <img src="/static/img/action-black.png" alt="Layer Control" style="height: 24px;">
+                </button>
+                <button id="mnu-legend" class="btn btn-outline-secondary me-2" data-bs-toggle="tooltip" title="Legend">
+                    <img src="/static/img/legend-black.png" alt="Legend" style="height: 24px;">
+                </button>
+                <button id="mnu-search" class="btn btn-outline-secondary me-2" data-bs-toggle="tooltip" title="Search">
+                    <img src="/static/img/search-black.png" alt="Search" style="height: 24px;">
+                </button>
+                <button id="topbar-views" class="btn btn-outline-secondary me-2" onclick="window.location.href='/folder';" data-bs-toggle="tooltip" title="Views">
+                    <img src="/static/img/views-black.png" alt="Views" style="height: 24px;">
+                </button>
+            </div>
+    
+            <!-- Logo in Center for All Devices -->
+            <div class="mx-auto">
+                <a class="navbar-brand" href="#">
+                    <img src="static/img/Final_Logo-removebg-preview.png" alt="Eggbred Logo" class="img-fluid" style="max-height: 50px;">
+                </a>
+            </div>
+    
+            <!-- Right Side Icons -->
+            <div class="d-flex align-items-center">
+                <button id="mnu-notifications" class="btn btn-outline-secondary me-2" data-bs-toggle="tooltip" title="Notifications">
+                    <img src="/static/img/notifications-black.png" alt="Notifications" style="height: 24px;">
+                </button>
+                <a id="mnuHelpCentre" class="btn btn-outline-secondary me-2" href="https://support.vision-mapping.com/hc" target="_blank" data-bs-toggle="tooltip" title="Help Centre">
+                    <img src="/static/img/help-black.png" alt="Help" style="height: 24px;">
+                </a>
+                <a id="userAdmin" class="btn btn-outline-secondary me-2" onclick="window.location.href='/folder';" data-bs-toggle="tooltip" title="User Admin">
+                    <img src="/static/img/settings-black.png" alt="Settings" style="height: 24px;">
+                </a>
+                <a id="logout" class="btn btn-outline-secondary" href="/Login/Login/Logout" data-bs-toggle="tooltip" title="Logout">
+                    <img src="/static/img/logout-black.png" alt="Logout" style="height: 24px;">
+                </a>
+    
+                <!-- Mobile Menu Button to Show All Icons -->
+                <button class="btn btn-outline-secondary d-lg-none ms-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#rightSidebarOffcanvas" aria-controls="rightSidebarOffcanvas">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+    <!-- Left Offcanvas Sidebar for Mobile -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="leftSidebarOffcanvas" aria-labelledby="leftSidebarOffcanvasLabel">
+        <div class="offcanvas-header">
+            <button type="button" class="btn-close" id="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body" id="defaultViewMob">
+            <div class="list-group" id="leftPanelMob">
+                Layer Control
+                <div class="mb-3">
+                    <button id="franchiseTerritoriesBtnMob" class="btn btn-outline-secondary w-100">
+                        Area-Development
+                    </button>
+                    <div id="franchiseControlsMob" class="mt-2" style="display: none;">
+                        <div class="btn-group w-100 d-flex justify-content-between">
+                            <button id="RenameMob" class="btn btn-outline-secondary me-1">
+                                <i class="fas fa-edit me-1"></i>Rename
+                            </button>
+                            <button id="toggleLabelsBtnMob" class="btn btn-outline-secondary me-1">
+                                <i class="fas fa-tags me-1"></i>Turn labels off
+                            </button>
+                            <button id="menuBtnMob" class="btn btn-outline-secondary">
+                                <i class="fas fa-plus-circle me-1"></i>New
+                            </button>
+                        </div>
+                    </div>
+                </div>                
+                <!-- Radial Button Mobile Version -->
+                <div class="mb-3">
+                    <button id="RadialAnalysisBtnMob" class="btn btn-outline-secondary w-100">
+                        Radial Analysis
+                    </button>
+                    <div id="radialControlsMob" class="mt-2" style="display: none;">
+                        <div class="btn-group w-100 d-flex justify-content-between">
+                            <button id="RenameradialMob" class="btn btn-outline-secondary me-1">
+                                <i class="fas fa-edit me-2"></i>Rename
+                            </button>
+                            <button id="toggleLabelsBtnRadialMob" class="btn btn-outline-secondary me-1">
+                                <i class="fas fa-tags me-2"></i>Turn labels off
+                            </button>
+                            <button id="menuBtnRadialMob" class="btn btn-outline-secondary">
+                                <i class="fas fa-plus-circle me-1"></i>New
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <button id="recruitmentTerritoriesBtnMob" class="btn btn-outline-secondary w-100">
+                        Recruitment Territories
+                    </button>
+                    <div id="recruitmentControlsMob" class="mt-2" style="display: none;">
+                        <div class="btn-group w-100 d-flex justify-content-between">
+                            <button id="RenamerecruitmentMob" class="btn btn-outline-secondary me-1">
+                                <i class="fas fa-edit me-2"></i>Rename
+                            </button>
+                            <button id="toggleLabelsBtnrecruitmentMob" class="btn btn-outline-secondary me-1">
+                                <i class="fas fa-tags me-2"></i>Turn labels off
+                            </button>
+                            <button id="menuBtnrecruitmentMob" class="btn btn-outline-secondary">
+                                <i class="fas fa-plus-circle me-1"></i>New
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="franchiseViewMob" class="p-3 bg-light border-top h-100" style="display: none;">
+                <div class="panel-header mb-3">
+                    <h1 class="h5 fw-bold text-secondary">Franchise Territories</h1>
+                </div>
+                <div class="mb-3">
+                    <h3 class="h6 fw-bold mb-2 text-secondary">Actions</h3>
+                    <button id="createNewAreaBtnMob" class="btn btn-outline-primary w-100 mb-2">
+                        Create new area
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <h3 class="h6 fw-bold mb-2 text-secondary">Display options</h3>
+                    <button class="btn btn-outline-secondary w-100 mb-2">
+                        Hide classification colours
+                    </button>
+                    <button class="btn btn-outline-secondary w-100 mb-2">
+                        Edit label content
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <h3 class="h6 fw-bold mb-2 text-secondary">Layer data</h3>
+                    <button class="btn btn-outline-secondary w-100 mb-2" id="tableViewBtnMob">Table view</button>
+                    <button class="btn btn-outline-secondary w-100 mb-2" id="layerInformationBtnMob">
+                        Layer information
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <h3 class="h6 fw-bold mb-2 text-secondary">Cancel Selection</h3>
+                    <button class="btn btn-outline-danger w-100 mb-2" id="cancel-btn-mob">
+                        Cancel
+                    </button>
+                </div>
+                <button id="backToLayerControlBtnMob" class="btn btn-outline-dark w-100">
+                    Back to layer control
+                </button>
+            </div>
+            <!-- Left Panel View for Radial View Mobile -->
+            <div id="radialviewMob" class="p-3 bg-light border-top h-100" style="display: none;">
+                <div class="panel-header mb-3">
+                    <h1 class="h5 fw-bold text-secondary">Radial Analysis</h1>
+                </div>
+                <div class="mb-3">
+                    <h3 class="h6 fw-bold mb-2 text-secondary">Actions</h3>
+                    <button id="createNewAreaBtnRadialMob" class="btn btn-outline-primary w-100 mb-2">
+                        Create new area
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <h3 class="h6 fw-bold mb-2 text-secondary">Display options</h3>
+                    <button class="btn btn-outline-secondary w-100 mb-2">
+                        Hide classification colours
+                    </button>
+                    <button class="btn btn-outline-secondary w-100 mb-2">
+                        Edit label content
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <h3 class="h6 fw-bold mb-2 text-secondary">Layer data</h3>
+                    <button class="btn btn-outline-secondary w-100 mb-2" id="tableViewBtnRadialMob">
+                        Table view
+                    </button>
+                    <button class="btn btn-outline-secondary w-100 mb-2" id="layerInformationBtnRadialMob">
+                        Layer information
+                    </button>
+                </div>
+                <button id="backToLayerControlBtnFromRadialMob" class="btn btn-outline-dark w-100">
+                    Back to layer control
+                </button>
+            </div>
+            <!-- Left Panel for recruitment Analysis Mobile -->
+            <div id="recruitmentViewMob" class="p-3 bg-light border-top h-100" style="display: none;">
+                <div class="panel-header mb-3">
+                    <h1 class="h5 fw-bold text-secondary">Recruitment Territories</h1>
+                </div>
+                <div class="mb-3">
+                    <h3 class="h6 fw-bold mb-2 text-secondary">Actions</h3>
+                    <button id="createNewAreaBtnRecruitmentMob" class="btn btn-outline-primary w-100 mb-2">
+                        Create new area
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <h3 class="h6 fw-bold mb-2 text-secondary">Display options</h3>
+                    <button class="btn btn-outline-secondary w-100 mb-2">
+                        Hide classification colours
+                    </button>
+                    <button class="btn btn-outline-secondary w-100 mb-2">
+                        Edit label content
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <h3 class="h6 fw-bold mb-2 text-secondary">Layer data</h3>
+                    <button class="btn btn-outline-secondary w-100 mb-2" id="tableViewBtnRecruitmentMob">
+                        Table view
+                    </button>
+                    <button class="btn btn-outline-secondary w-100 mb-2" id="layerInformationBtnRecruitmentMob">
+                        Layer information
+                    </button>
+                </div>
+                <div class="mb-3">
+                    <h3 class="h6 fw-bold mb-2 text-secondary">Cancel Selection</h3>
+                    <button class="btn btn-outline-danger w-100 mb-2" id="cancel-btn-rec-mob">
+                        Cancel
+                    </button>
+                </div>
+                <button id="backToLayerControlBtnRecruitmentMob" class="btn btn-outline-dark w-100">
+                    Back to layer control
+                </button>
+            </div>
+            <!-- Search for Address - Create New Area (Radial Analysis) - Mobile -->
+            <div id="address-input-mob" class="p-3 bg-light h-100" style="display: none;">
+                <div class="mb-3">
+                    <h5 class="fw-bold text-secondary">Enter an Address</h5>
+                    <input id="autocompleteMob" type="text" class="form-control mt-2" placeholder="Enter an address">
+                </div>
+                <div class="d-grid gap-2 mt-3">
+                    <button id="submitButtonAutoCompleteMob" type="button" class="btn btn-outline-primary">
+                        Submit
+                    </button>
+                    <button id="backToRadialControlFromAutoCompleteMob" type="button" class="btn btn-outline-secondary">
+                        Back To Action Layer
+                    </button>
+                </div>
+            </div>
+            <!-- Layer information for Mobile -->
+             <!-- Layer Info Franchise - Mobile -->
+            <div id="layerInfoViewMob" class="p-3 bg-light h-100" style="display: none;">
+                <h5 class="fw-bold text-secondary">Number of Records: <span id="recordCountMob"></span></h5>
+                <div class="d-flex justify-content-center my-3">
+                    <canvas id="classificationPieChartMob" width="200" height="200"></canvas>
+                </div>
+                <button id="backToFranchiseViewBtnMob" class="btn btn-outline-secondary w-100 mt-2">
+                    Back to Action Menu
+                </button>
+            </div>
+            <!-- Layer Info Radial - Mobile -->
+            <div id="layerInfoViewRadialMob" class="p-3 bg-light h-100" style="display: none;">
+                <h5 class="fw-bold text-secondary">Number of Records: <span id="recordCountRadialMob"></span></h5>
+                <div class="d-flex justify-content-center my-3">
+                    <canvas id="classificationPieChartRadialMob" width="200" height="200"></canvas>
+                </div>
+                <button id="backToViewBtnRadialMob" class="btn btn-outline-secondary w-100 mt-2">
+                    Back to Action Menu
+                </button>
+            </div>
+            <!-- Layer Info Recruitment - Mobile -->
+            <div id="layerInfoViewRecruitmentMob" class="p-3 bg-light h-100" style="display: none;">
+                <h5 class="fw-bold text-secondary">Number of Records: <span id="recordCountRecruitmentMob"></span></h5>
+                <div class="d-flex justify-content-center my-3">
+                    <canvas id="classificationPieChartRecruitmentMob" width="200" height="200"></canvas>
+                </div>
+                <button id="backToViewBtnRecruitmentMob" class="btn btn-outline-secondary w-100 mt-2">
+                    Back to Action Menu
+                </button>
+            </div>
+            <!-- Table View for Franchise Mobile -->
+            <div id="tableViewMob" class="p-3 bg-light h-100" style="display: none;">
+                <h5 class="fw-bold text-secondary mb-3">Table Data</h5>
+                <div class="table-responsive">
+                    <table id="dataTableMob" class="table table-striped table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-center">Name</th>
+                                <th class="text-center">Unique Key</th>
+                                <th class="text-center">Classification</th>
+                                <th class="text-center p-0 m-0">
+                                    <button onclick="addColumnMob()" class="btn btn-outline-primary btn-sm">
+                                        Add Column
+                                    </button>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-grid gap-2 mt-3">
+                    <button id="exportToCSVMob" class="btn btn-success w-100">
+                        Export to CSV
+                    </button>
+                    <button id="returnToMapFromTableMob" class="btn btn-outline-secondary w-100">
+                        Back to Layer Control
+                    </button>
+                </div>
+            </div>
+            <!-- Left Side Table for Radial Mobile -->
+            <div id="tableViewRadialMob" class="p-3 bg-light h-100" style="display: none;">
+                <h5 class="fw-bold text-secondary mb-3">Table Data</h5>
+                <div class="table-responsive">
+                    <table id="dataTableradialMob" class="table table-striped table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-center">Name</th>
+                                <th class="text-center">Unique Key</th>
+                                <th class="text-center">Classification</th>
+                                <th class="text-center p-0 m-0">
+                                    <button onclick="addColumnMob()" class="btn btn-outline-primary btn-sm">
+                                        Add Column
+                                    </button>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Buttons -->
+                <div class="d-grid gap-2 mt-3">
+                    <button id="exportToCSVRadialMob" class="btn btn-success w-100">
+                        Export to CSV
+                    </button>
+                    <button id="returnToMapFromTableRadialMob" class="btn btn-outline-secondary w-100">
+                        Back to Layer Control
+                    </button>
+                </div>
+            </div>
+            <!-- Left Side Table for Recruitment Mobile -->
+            <div id="tableViewRecruitmentMob" class="p-3 bg-light h-100" style="display: none;">
+                <h5 class="fw-bold text-secondary mb-3">Table Data</h5>
+                <div class="table-responsive">
+                    <table id="dataTableRecruitmentMob" class="table table-striped table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-center">Name</th>
+                                <th class="text-center">Unique Key</th>
+                                <th class="text-center">Classification</th>
+                                <th class="text-center p-0 m-0">
+                                    <button onclick="addColumnMob()" class="btn btn-outline-primary btn-sm">
+                                        Add Column
+                                    </button>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Buttons -->
+                <div class="d-grid gap-2 mt-3">
+                    <button id="exportToCSVRecruitmentMob" class="btn btn-success w-100">
+                        Export to CSV
+                    </button>
+                    <button id="returnToMapFromTableRecruitmentMob" class="btn btn-outline-secondary w-100">
+                        Back to Layer Control
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Right Sidebar for Mobile -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="rightSidebarOffcanvas" aria-labelledby="rightSidebarOffcanvasLabel">
+        <div class="offcanvas-header">
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body bg-light">
+            <!-- Demographic Table Franchise for Mobile -->
+            <div id="demographic-table-mob" class="table-responsive mb-3" style="display: none;">
+                <table id="demographicTableMob" class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="text-center">Demographic</th>
+                            <th class="text-center">Selected Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Population</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                    </tbody>
+                    <tbody id="extra-rows-mob" style="display: none;">
+                        <tr>
+                            <td>Households</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Households Less Than $10,000 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $10,000 to $14,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $15,000 to $24,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $25,000 to $34,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $35,000 to $49,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $50,000 to $74,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $75,000 to $99,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $100,000 to $149,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $150,000 to $199,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $200,000 and over (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="text-center mb-2">
+                    <button id="show-more-btn-mob" class="btn btn-link">
+                        ⬇ Show More
+                    </button>
+                </div>
+                <!-- Action and Control Buttons for Mobile -->
+                <div class="d-grid gap-2">
+                    <button id="ActionBtnMob" type="button" class="btn btn-info" style="display: none;">
+                        Action
+                    </button>
+                    <button id="CloseBtnMob" type="button" class="btn btn-danger" style="display: none;">
+                        Close
+                    </button>
+                    <button id="submit-btn-mob" type="button" class="btn btn-success">
+                        Continue
+                    </button>
+                </div>
+            </div>
+            <!-- DEMOGRAPHIC TABLE FOR RADIAL ANALYSIS MOBILE -->
+            <div id="demographic-table-radial-mob" class="table-responsive mb-3" style="display: none;">
+                 <h5 id="franchise-display-mob" class="mb-2" style="display: none;"></h5>
+                <table id="demographicTableRadialMob" class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="text-center">Demographic</th>
+                            <th class="text-center">Selected Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Population</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Median Value</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <!-- Action and Control Buttons for Mobile -->
+                <div class="d-grid gap-2">
+                    <button id="ActionBtnRadialMob" type="button" class="btn btn-info">
+                        Action
+                    </button>
+                    <button id="CloseBtnRadialMob" type="button" class="btn btn-danger">
+                        Close
+                    </button>
+                    <button id="submit-btn-radial-mob" type="button" class="btn btn-success">
+                        Continue
+                    </button>
+                </div>
+            </div>
+            <!-- DEMOGRAPHIC TABLE FOR RECRUITMENT MOBILE -->
+            <div id="demographic-table-recruitment-mob" class="table-responsive mb-3" style="display: none;">
+                <table id="demographicTableRecruitmentMob" class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="text-center">Demographic</th>
+                            <th class="text-center">Selected Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Population</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                    </tbody>
+                    <tbody id="moreDemographicsRecMob" style="display: none;">>
+                        <tr>
+                            <td>Households</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Households Less Than $10,000 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $10,000 to $14,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $15,000 to $24,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $25,000 to $34,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $35,000 to $49,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $50,000 to $74,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $75,000 to $99,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $100,000 to $149,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $150,000 to $199,999 (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                        <tr>
+                            <td>Household Income - $200,000 and over (Est)</td>
+                            <td class="text-end">0</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="text-center mb-2">
+                    <button id="show-more-btn-recruitment-mob" class="btn btn-link">
+                        ⬇ Show More
+                    </button>
+                </div>
+                <!-- Action and Control Buttons for Mobile -->
+                <div class="d-grid gap-2">
+                    <button id="ActionBtnRecruitmentMob" type="button" class="btn btn-info" style="display: none;">
+                        Action
+                    </button>
+                    <button id="CloseBtnRecruitmentMob" type="button" class="btn btn-danger" style="display: none;">
+                        Close
+                    </button>
+                    <button id="submit-btn-recruitment-mob" type="button" class="btn btn-success">
+                        Continue
+                    </button>
+                </div>
+            </div>
+            <!-- Input Panel for Franhchise Territories Mobile -->
+            <div id="input-area-mob" class="container-fluid mt-3 p-3 border rounded" style="display: none;">
+                <div class="row">
+                    <div class="col-12">
+                        <label for="franchiseeMob">Franchisee Number</label>
+                        <input type="text" id="franchiseeMob" class="form-control mb-2" placeholder="Enter Franchisee Number">
+                    </div>
+                    <div class="col-12">
+                        <label>Franchisee Name</label>
+                        <input type="text" id="area-name-mob" class="form-control mb-2" placeholder="Enter Franchisee Name">
+                    </div>
+                    <div class="col-12">
+                        <label for="num-developments-mob">Number of Developments</label>
+                        <input type="number" id="num-developments-mob" class="form-control mb-2" placeholder="Enter number of developments">
+                    </div>
+                    <div class="col-12">
+                        <label for="zip-codes-mob">Zip Codes</label>
+                        <input type="text" id="zip-codes-mob" class="form-control mb-2" placeholder="Enter zip codes">
+                    </div>
+                    <div class="col-12">
+                        <label for="state-mob">State</label>
+                        <input type="text" id="state-mob" class="form-control mb-2" placeholder="Enter state">
+                    </div>
+                    <div class="col-12 mb-2">
+                        <div class="d-flex align-items-center">
+                            <div class="color-option me-2" data-color="rgb(0,30,255)">
+                                <svg viewBox="-30 -26 60 52" height="25px" width="25px" version="1.1">
+                                    <path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(0,30,255,0.3)"></path>
+                                </svg>
+                            </div>
+                            <p class="m-0 fw-bold">Area Development</p>
+                        </div>
+                    </div>
+                    <div class="col-12 d-flex gap-2">
+                        <button id="save-btn-mob" class="btn btn-success flex-grow-1">Save</button>
+                        <button id="save-back-mob" class="btn btn-dark flex-grow-1">Back</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Input Panel for Radial Analysis Mobile -->
+            <div id="input-area-radial-mob" class="container-fluid p-3 border rounded" style="display: none;">
+                <div class="row">
+                    <div class="col-12">
+                        <label>Franchisee Number</label>
+                        <input type="text" id="franchise-number-radial-mob" class="form-control mb-2" placeholder="Enter Franchisee Number">
+                    </div>
+                    <div class="col-12">
+                        <label>Franchisee Name</label>
+                        <input type="text" id="area-name-radial-mob" class="form-control mb-2" placeholder="Enter Franchisee Name">
+                    </div>
+                    <div class="col-12">
+                        <label>City</label>
+                        <input type="text" id="city-radial-mob" class="form-control mb-2" placeholder="Enter City">
+                    </div>
+                    <div class="col-12">
+                        <label>State</label>
+                        <input type="text" id="state-radial-mob" class="form-control mb-2" placeholder="Enter State">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12 d-flex flex-wrap align-items-center gap-3">
+                        <div class="color-option d-flex align-items-center" data-color="white">
+                            <svg viewBox="-30 -26 60 52" height="25px" width="25px"><path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(255,255,255,0)"></path></svg>
+                            <p class="m-0 fw-bold">No Classification</p>
+                        </div>
+                        <div class="color-option d-flex align-items-center" data-color="rgb(0,30,255)">
+                            <svg viewBox="-30 -26 60 52" height="25px" width="25px"><path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(0,30,255,0.3)"></path></svg>
+                            <p class="m-0 fw-bold">In Negotiation</p>
+                        </div>
+                        <div class="color-option d-flex align-items-center" data-color="rgb(17,255,0)">
+                            <svg viewBox="-30 -26 60 52" height="25px" width="25px"><path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(17,255,0,0.3)"></path></svg>
+                            <p class="m-0 fw-bold">Open</p>
+                        </div>
+                        <div class="color-option d-flex align-items-center" data-color="rgb(255,247,0)">
+                            <svg viewBox="-30 -26 60 52" height="25px" width="25px"><path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(255,247,0,0.3)"></path></svg>
+                            <p class="m-0 fw-bold">Under Construction</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12 d-flex flex-column flex-md-row gap-2 w-100">
+                        <button id="save-btn-radial-mob" class="btn btn-success flex-grow-1">Save</button> 
+                        <button id="save-back-radial-mob" class="btn btn-dark flex-grow-1">Back</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Input Panel for Recruitment Analysis Mobile -->
+            <div id="input-area-recruitment-mob" class="container-fluid p-3 border rounded" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="recruitmentAreaMob">Franchisee Number</label>
+                        <input type="text" id="recruitmentAreaMob" class="form-control mb-3" placeholder="Enter Franchisee Number">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="area-name-recruitment-mob">Franchisee Name</label>
+                        <input type="text" id="area-name-recruitment-mob" class="form-control mb-3" placeholder="Enter Franchisee Name">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="PotStoreCountMob">Potential Store Count</label>
+                        <input type="number" id="PotStoreCountMob" class="form-control mb-3" placeholder="Enter Potential Store Count">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="zipCodesRecruitmentMob">Zip Codes</label>
+                        <input type="text" id="zipCodesRecruitmentMob" class="form-control mb-3" placeholder="Enter zip codes">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="stateRecruitmentMob">State</label>
+                        <input type="text" id="stateRecruitmentMob" class="form-control mb-3" placeholder="Enter state">
+                    </div>
+                    <div class="col-md-6">
+                        <label>Category</label>
+                        <form id="categoryForm">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="category" value="Primary Area" id="primaryMob">
+                                <label class="form-check-label" for="primaryMob">Primary Area</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="category" value="Secondary Area" id="secondaryMob">
+                                <label class="form-check-label" for="secondaryMob">Secondary Area</label>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="color-option d-flex align-items-center" data-color="rgb(255,247,0)">
+                            <svg viewBox="-30 -26 60 52" height="25px" width="25px" version="1.1">
+                                <path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(255,247,0,0.3)"></path>
+                            </svg>
+                            <p class="ms-3 fw-bold text-dark">Recruitment Analysis</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row btn-position">
+                    <div class="col-md-6">
+                        <button id="save-btn-recruitment-mob" class="btn btn-success w-100 mb-2">Save Recruitment Area</button>
+                    </div>
+                    <div class="col-md-6">
+                        <button id="save-back-recruitment-mob" class="btn btn-dark w-100">Back</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Action Menu for Franchise Territories Mobile -->
+            <div id="franchiseViewRightMob" class="container-fluid" style="display: none;">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="section text-center">
+                            <h3 class="h6 fw-bold mb-2 text-secondary">More data</h3>
+                            <button class="btn btn-outline-primary w-100 mb-2" id="FranchiseNotesMob">Notes</button>
+                        </div>
+                    </div>
+                </div>      
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="section text-center">
+                            <h3 class="h6 fw-bold mb-2 text-secondary">Reports and Exports</h3>
+                            <button class="btn btn-outline-secondary w-100 mb-2" id="demographicMob">Demographic report</button>
+                            <button class="btn btn-outline-secondary w-100 mb-2" id="DownloadDemographicbreakdownMob">Download Demographic breakdown</button>
+                        </div>
+                    </div>
+                </div>  
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="section text-center">
+                            <h3 class="h6 fw-bold mb-2 text-secondary">Edit</h3>
+                            <button class="btn btn-outline-secondary w-100 mb-2" id="editAreaBoundryMob">Edit Area</button>
+                            <button class="btn btn-outline-secondary w-100 mb-2" id="DeleteLayerButtonFranchiseMob" data-toggle="modal" data-target="#delet-area" style="background-color: red;">Delete area</button>
+                        </div>
+                    </div>
+                </div>  
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="section text-center">
+                            <h3 class="h6 fw-bold mb-2 text-secondary">Go back to Table view</h3>
+                            <button id="BackToTableFranchiseMob" class="btn btn-outline-dark w-100">Go back</button>
+                        </div>
+                    </div>
+                </div>  
+            </div>
+            <!-- Action Menu For Radial Analysis Mobile -->
+            <div id="RadialViewRightMob" class="container-fluid" style="display: none;">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="section text-center">
+                            <h3 class="h6 fw-bold mb-2 text-secondary">More data</h3>
+                            <button class="btn btn-outline-primary w-100 mb-2" id="RadialNotesMob">Notes</button>
+                        </div>
+                    </div>
+                </div>      
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="section text-center">
+                            <h3 class="h6 fw-bold mb-2 text-secondary">Reports and Exports</h3>
+                            <button class="btn btn-outline-secondary w-100 mb-2" id="demographicRadialMob">Demographic report</button>
+                            <button class="btn btn-outline-secondary w-100 mb-2" id="DownloadDemographicbreakdownRadialMob">Download Demographic breakdown</button>
+                        </div>
+                    </div>
+                </div>  
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="section text-center">
+                            <h3 class="h6 fw-bold mb-2 text-secondary">Edit</h3>
+                            <button class="btn btn-outline-secondary w-100 mb-2" id="editAreaBoundryRadialMob">Edit Area</button>
+                            <button class="btn btn-outline-secondary w-100 mb-2" id="DeleteLayerButtonRadialMob" data-toggle="modal" data-target="#delet-area" style="background-color: red;">Delete area</button>
+                        </div>
+                    </div>
+                </div>  
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="section text-center">
+                            <h3 class="h6 fw-bold mb-2 text-secondary">Go back to Table view</h3>
+                            <button id="BackToTableRadialMob" class="btn btn-outline-dark w-100">Go back</button>
+                        </div>
+                    </div>
+                </div>  
+            </div>
+            <!-- Recruitment Analysis Action View for Mobile -->
+            <div id="RecruitmentViewRightMob" class="container-fluid" style="display: none;">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="section text-center">
+                            <h3 class="h6 fw-bold mb-2 text-secondary">More data</h3>
+                            <button class="btn btn-outline-primary w-100 mb-2" id="RecruitmentNotesMob">Notes</button>
+                        </div>
+                    </div>
+                </div>      
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="section text-center">
+                            <h3 class="h6 fw-bold mb-2 text-secondary">Reports and Exports</h3>
+                            <button class="btn btn-outline-secondary w-100 mb-2" id="demographicRecruitmentMob">Demographic report</button>
+                            <button class="btn btn-outline-secondary w-100 mb-2" id="DownloadDemographicbreakdownRecruitmentMob">Download Demographic breakdown</button>
+                        </div>
+                    </div>
+                </div>  
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="section text-center">
+                            <h3 class="h6 fw-bold mb-2 text-secondary">Edit</h3>
+                            <button class="btn btn-outline-secondary w-100 mb-2" id="editAreaBoundryRecruitmentMob">Edit Area</button>
+                            <button class="btn btn-outline-secondary w-100 mb-2" id="DeleteLayerButtonRecruitmentMob" data-toggle="modal" data-target="#delet-area" style="background-color: red;">Delete area</button>
+                        </div>
+                    </div>
+                </div>  
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="section text-center">
+                            <h3 class="h6 fw-bold mb-2 text-secondary">Go back to Table view</h3>
+                            <button id="BackToTableRecruitmentMob" class="btn btn-outline-dark w-100">Go back</button>
+                        </div>
+                    </div>
+                </div>  
+            </div>
+            <!-- Edit Area Modal For Radial Analysis -->
+            <div data-mdb-input-init class="form-outline container-fluid" id="editradialnumberMob" style = "display: none;">
+                <div class="row">
+                    <div class="col-md-12 text-center">
+                        <input min="1" type="number" id="typeNumberMob" class="form-control mb-2" />
+                        <label class="form-label" for="typeNumberMob">Number input</label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 text-center">
+                        <button id="saveBtnForRadiusMob" class="btn btn-success w-100 mb-2">Save</button>
+                        <button id="backFromEditRadialMob" class="btn btn-dark w-100 mb-2">Back to record memory</button> 
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>    
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Sidebar for Desktop -->
+            <div class="col-md-2 col-lg-2 d-md-block border-end" id="leftPanel" style="display: none;">
+                <div class="list-group mt-3" id="defaultView">
+                    <p class="fw-bold mb-2">Layer Control</p>
+                    <!-- Area-Development Button Group -->
+                    <div class="mb-3">
+                        <button id="franchiseTerritoriesBtn" class="btn btn-outline-secondary w-100">
+                            Area-Development
+                        </button>
+                        <div id="franchiseControls" class="mt-2" style="display: none;">
+                            <div class="btn-group w-100 d-flex justify-content-between">
+                                <button id="Rename" class="btn btn-outline-secondary me-1">
+                                    <i class="fas fa-edit me-1"></i>Rename
+                                </button>
+                                <button id="toggleLabelsBtn" class="btn btn-outline-secondary me-1">
+                                    <i class="fas fa-tags me-1"></i>Turn labels off
+                                </button>
+                                <button id="menuBtn" class="btn btn-outline-secondary">
+                                    <i class="fas fa-plus-circle me-1"></i>New
+                                </button>
+                            </div>
+                        </div>
+                    </div>                  
+                    <!-- Radial Analysis Buttons -->
+                    <div class="mb-3">
+                        <button id="RadialAnalysisBtn" class="btn btn-outline-secondary w-100">
+                            Radial Analysis
+                        </button>
+                        <div id="radialControls" class="mt-2" style="display: none;">
+                            <div class="btn-group w-100 d-flex justify-content-between">
+                                <button id="Renameradial" class="btn btn-outline-secondary me-1">
+                                    <i class="fas fa-edit me-1"></i>Rename
+                                </button>
+                                <button id="toggleLabelsBtnRadial" class="btn btn-outline-secondary me-1">
+                                    <i class="fas fa-tags me-1"></i>Turn labels off
+                                </button>
+                                <button id="menuBtnRadial" class="btn btn-outline-secondary">
+                                    <i class="fas fa-plus-circle me-1"></i>New
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <button id="recruitmentTerritoriesBtn" class="btn btn-outline-secondary w-100">
+                            Recruitment Territories
+                        </button>
+                        <div id="recruitmentControls" class="mt-2" style="display: none;">
+                            <div class="btn-group w-100 d-flex justify-content-between">
+                                <button id="Renamerecruitment" class="btn btn-outline-secondary me-1">
+                                    <i class="fas fa-edit me-1"></i>Rename
+                                </button>
+                                <button id="toggleLabelsBtnrecruitment" class="btn btn-outline-secondary me-1">
+                                    <i class="fas fa-tags me-1"></i>Turn labels off
+                                </button>
+                                <button id="menuBtnrecruitment" class="btn btn-outline-secondary">
+                                    <i class="fas fa-plus-circle me-1"></i>New
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="/readonly" class="btn btn-sidebar btn-outline-secondary d-none">Read Only Mode</a>
+                </div>
+                <!-- INSIDE LAYER FOR AREA DEVELOPMENT -->
+                <div id="franchiseView" class="p-3 bg-light border-end h-100" style="display: none;">
+                    <div class="panel-header mb-3">
+                        <h1 class="h4 fw-bold text-secondary">Franchise Territories</h1>
+                    </div>
+                    <div class="mb-3">
+                        <h3 class="h6 fw-bold mb-2 text-secondary">Actions</h3>
+                        <button id="createNewAreaBtn" class="btn btn-outline-secondary w-100">
+                            Create new area
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <h3 class="h6 fw-bold mb-2 text-secondary">Display options</h3>
+                        <button class="btn btn-outline-secondary w-100">
+                            Hide classification colours
+                        </button>
+                        <button class="btn btn-outline-secondary w-100">
+                            Edit label content
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <h3 class="h6 fw-bold mb-2 text-secondary">Layer data</h3>
+                        <button class="btn btn-outline-secondary w-100 action-btn" id="tableViewBtn">Table view</button>
+                        <button class="btn btn-outline-secondary w-100" id="layerInformationBtn">
+                            Layer information
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <h3 class="h6 fw-bold mb-2 text-secondary">Cancel Selection</h3>
+                        <button class="btn btn-outline-secondary w-100" id="cancel-btn">
+                            Cancel
+                        </button>
+                    </div>
+                    <button id="backToLayerControlBtn" class="btn btn-outline-secondary w-100">
+                        Back to layer control
+                    </button>
+                </div>
+                <!-- INSIDE BUTTON FOR RADIAL ANALYSIS DESKTOP -->
+                <div id="radialview" class="p-3 bg-light border-end h-100" style="display: none;">
+                    <div class="panel-header mb-3">
+                        <h1 class="h4 fw-bold text-secondary">Radial Analysis</h1>
+                    </div>
+                    <div class="mb-3">
+                        <h3 class="h6 fw-bold mb-2 text-secondary">Actions</h3>
+                        <button id="createNewAreaBtnRadial" class="btn btn-outline-secondary w-100">
+                            Create new area
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <h3 class="h6 fw-bold mb-2 text-secondary">Display options</h3>
+                        <button class="btn btn-outline-secondary w-100">
+                            Hide classification colours
+                        </button>
+                        <button class="btn btn-outline-secondary w-100">
+                            Edit label content
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <h3 class="h6 fw-bold mb-2 text-secondary">Layer data</h3>
+                        <button class="btn btn-outline-secondary w-100" id="tableViewBtnRadial">
+                            Table view
+                        </button>
+                        <button class="btn btn-outline-secondary w-100" id="layerInformationBtnRadial">
+                            Layer information
+                        </button>
+                    </div>
+                    <button id="backToLayerControlBtnFromRadial" class="btn btn-outline-secondary w-100">
+                        Back to layer control
+                    </button>
+                </div>
+                <!-- INSIDE LAYER FOR Recruitment Analysis -->
+                <div id="recruitmentView" class="p-3 bg-light border-end h-100" style="display: none;">
+                    <div class="panel-header mb-3">
+                        <h1 class="h4 fw-bold text-secondary">Recruitment Analysis</h1>
+                    </div>
+                    <div class="mb-3">
+                        <h3 class="h6 fw-bold mb-2 text-secondary">Actions</h3>
+                        <button id="createNewAreaBtnRecruitment" class="btn btn-outline-secondary w-100">
+                            Create new area
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <h3 class="h6 fw-bold mb-2 text-secondary">Display options</h3>
+                        <button class="btn btn-outline-secondary w-100">
+                            Hide classification colours
+                        </button>
+                        <button class="btn btn-outline-secondary w-100">
+                            Edit label content
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <h3 class="h6 fw-bold mb-2 text-secondary">Layer data</h3>
+                        <button class="btn btn-outline-secondary w-100" id="tableViewBtnRecruitment">
+                            Table view
+                        </button>
+                        <button class="btn btn-outline-secondary w-100" id="layerInformationBtnRecruitment">
+                            Layer information
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <h3 class="h6 fw-bold mb-2 text-secondary">Cancel Selection</h3>
+                        <button class="btn btn-outline-secondary w-100" id="cancel-btn-rec">
+                            Cancel
+                        </button>
+                    </div>
+                    <button id="backToLayerControlBtnRecruitment" class="btn btn-outline-secondary w-100">
+                        Back to layer control
+                    </button>
+                </div>
+                <!-- radial Search Input in left panel -->
+                <div id="address-input" class="p-3 bg-light border-end h-100" style="display: none;">
+                    <div class="mb-3">
+                        <h5 class="fw-bold text-secondary">Enter an Address</h5>
+                        <input id="autocomplete" type="text" class="form-control mt-2" placeholder="Enter an address">
+                    </div>
+                    <div class="d-grid gap-2 mt-3">
+                        <button id="submitButtonAutoComplete" type="button" class="btn btn-outline-primary">
+                            Submit
+                        </button>
+                        <button id="backToRadialControlFromAutoComplete" type="button" class="btn btn-outline-secondary">
+                            Back To Action Layer
+                        </button>
+                    </div>
+                </div>
+                <!-- Layer Information Franchise (Bootstrap Applied) -->
+                <div id="layerInfoViewFranchise" class="p-3 bg-light h-100" style="display: none;">
+                    <h5 class="fw-bold text-secondary">Number of Records: <span id="recordCount"></span></h5>
+                    <div class="d-flex justify-content-center my-3">
+                        <canvas id="classificationPieChart" width="200" height="200"></canvas>
+                    </div>
+                    <div class="d-grid gap-2 mt-3">
+                        <button id="backToFranchiseViewBtn" class="btn btn-outline-secondary">
+                            Back to Action Menu
+                        </button>
+                    </div>
+                </div>
+                <!-- Layer Information Radial (Bootstrap Applied) -->
+                <div id="layerInfoViewRadial" class="p-3 bg-light h-100" style="display: none;">
+                    <h5 class="fw-bold text-secondary">Number of Records: <span id="recordCountRadial"></span></h5>
+                    <div class="d-flex justify-content-center my-3">
+                        <canvas id="classificationPieChartRadial" width="200" height="200"></canvas>
+                    </div>
+                    <div class="d-grid gap-2 mt-3">
+                        <button id="backToViewBtnRadial" class="btn btn-outline-secondary">
+                            Back to Action Menu
+                        </button>
+                    </div>
+                </div>
+                <!-- Layer Information Recruitment (Bootstrap Applied) -->
+                <div id="layerInfoViewRecruitment" class="p-3 bg-light h-100" style="display: none;">
+                    <h5 class="fw-bold text-secondary">Number of Records: <span id="recordCountRecruitment"></span></h5>
+                    <div class="d-flex justify-content-center my-3">
+                        <canvas id="classificationPieChartRecruitment" width="200" height="200"></canvas>
+                    </div>
+                    <div class="d-grid gap-2 mt-3">
+                        <button id="backToViewBtnRecruitment" class="btn btn-outline-secondary">
+                            Back to Action Menu
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-8">
+                <div id="map-container" class="mt-3"></div>
+                <!-- Table View Section (Bootstrap Applied) -->
+                <div id="tableView" class="p-3 bg-light h-100" style="display: none;">
+                    <h5 class="fw-bold text-secondary mb-3">Table Data</h5>
+                    <div class="table-responsive">
+                        <table id="dataTable" class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="text-center">Name</th>
+                                    <th class="text-center">Unique Key</th>
+                                    <th class="text-center">Classification</th>
+                                    <th class="text-center p-0 m-0">
+                                        <button onclick="addColumn()" class="btn btn-outline-primary btn-sm">
+                                            Add Column
+                                        </button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Buttons -->
+                    <div class="d-grid gap-2 mt-3">
+                        <button id="exportToCSV" class="btn btn-success w-100">
+                            Export to CSV
+                        </button>
+                        <button id="returnToMapFromTable" class="btn btn-outline-secondary w-100">
+                            Back to Layer Control
+                        </button>
+                    </div>
+                </div>
+                <div id="tableViewRadial" class="p-3 bg-light h-100" style="display: none;">
+                    <h5 class="fw-bold text-secondary mb-3">Table Data</h5>
+                    <div class="table-responsive">
+                        <table id="dataTableRadial" class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="text-center">Name</th>
+                                    <th class="text-center">Unique Key</th>
+                                    <th class="text-center">Classification</th>
+                                    <th class="text-center p-0 m-0">
+                                        <button onclick="addColumn()" class="btn btn-outline-primary btn-sm">
+                                            Add Column
+                                        </button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-grid gap-2 mt-3">
+                        <button id="exportToCSVRadial" class="btn btn-success w-100">
+                            Export to CSV
+                        </button>
+                        <button id="returnToMapFromTableRadial" class="btn btn-outline-secondary w-100">
+                            Back to Layer Control
+                        </button>
+                    </div>
+                </div>
+                <div id="tableViewRecruitment" class="p-3 bg-light h-100" style="display: none;">
+                    <h5 class="fw-bold text-secondary mb-3">Table Data</h5>
+                    <div class="table-responsive">
+                        <table id="dataTableRecruitment" class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="text-center">Name</th>
+                                    <th class="text-center">Unique Key</th>
+                                    <th class="text-center">Classification</th>
+                                    <th class="text-center p-0 m-0">
+                                        <button onclick="addColumn()" class="btn btn-outline-primary btn-sm">
+                                            Add Column
+                                        </button>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                    <td><input type="text" class="form-control form-control-sm" placeholder="Filter"></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Buttons -->
+                    <div class="d-grid gap-2 mt-3">
+                        <button id="exportToCSVRecruitment" class="btn btn-success w-100">
+                            Export to CSV
+                        </button>
+                        <button id="returnToMapFromTableRecruitment" class="btn btn-outline-secondary w-100">
+                            Back to Layer Control
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- RIGHT PANEL FOR DESKTOP -->
+            <div class="col-md-2 col-lg-2 d-md-block border-start" style="display: none;">
+                <div class="list-group mt-3">
+                    <div id="demographic-table" class="table-responsive mb-3" style="display: none;">
+                        <table id="demographicTable" class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="text-center">Demographic</th>
+                                    <th class="text-center">Selected Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Population</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                            </tbody>
+                            <!-- Hidden rows -->
+                            <tbody id="extra-rows" style="display: none;">
+                                <tr>
+                                    <td>Households</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Households Less Than $10,000 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $10,000 to $14,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $15,000 to $24,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $25,000 to $34,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $35,000 to $49,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $50,000 to $74,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $75,000 to $99,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $100,000 to $149,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $150,000 to $199,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $200,000 and over (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    
+                        <!-- Show More Button -->
+                        <div class="text-center mb-2">
+                            <button id="show-more-btn" class="btn btn-link">
+                                ⬇ Show More
+                            </button>
+                        </div>
+                    
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button id="ActionBtn" type="button" class="btn btn-info" style="display: none;">Action</button>
+                            <button id="CloseBtn" type="button" class="btn btn-danger" style="display: none;">Close</button>
+                            <button id="submit-btn" type="button" class="btn btn-success">Continue</button>
+                        </div>
+                    </div>
+                    
+                    <!-- DEMOGRAPHIC TABLE FOR RADIAL ANALYSIS DESKTOP -->
+                    <div id="demographic-table-radial" class="table-responsive mb-3" style="display: none;">
+                        <h5 id="franchise-display" class="mb-2" style="display: none;"></h5>
+                        <table id="demographicTableRadial" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Demographic</th>
+                                    <th>Selected value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Population</td>
+                                    <td>0</td>
+                                </tr>
+                                <tr>
+                                    <td>Median Income</td>
+                                    <td>0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="d-grid gap-2">
+                            <button id="ActionBtnRadial" type="button" class="btn btn-info">
+                                Action
+                            </button>
+                            <button id="CloseBtnRadial" type="button" class="btn btn-danger">
+                                Close
+                            </button>
+                            <button id="submit-btn-radial" type="button" class="btn btn-success">
+                                Continue
+                            </button>
+                        </div>
+                    </div>
+                    <!-- DEMOGRAPHIC TABLE FOR RECRUITMENT ANALYSIS DESKTOP -->
+                    <div id="demographic-table-recruitment" class="table-responsive mb-3" style="display: none;">
+                        <table id="demographicTableRecruitment" class="table table-striped table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="text-center">Demographic</th>
+                                    <th class="text-center">Selected Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Population</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                            </tbody>
+                            <!-- Hidden rows -->
+                            <tbody id="moreDemographics" style="display: none;">
+                                <tr>
+                                    <td>Households</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Households Less Than $10,000 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $10,000 to $14,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $15,000 to $24,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $25,000 to $34,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $35,000 to $49,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $50,000 to $74,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $75,000 to $99,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $100,000 to $149,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $150,000 to $199,999 (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Household Income - $200,000 and over (Est)</td>
+                                    <td class="text-end">0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    
+                        <!-- Show More Button -->
+                        <div class="text-center mb-2">
+                            <button id="show-more-btn-recruitment" class="btn btn-link">
+                                ⬇ Show More
+                            </button>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button id="ActionBtnRecruitment" type="button" class="btn btn-info" style="display: none;">
+                                Action
+                            </button>
+                            <button id="CloseBtnRecruitment" type="button" class="btn btn-danger" style="display: none;">
+                                Close
+                            </button>
+                            <button id="submit-btn-recruitment" type="button" class="btn btn-success">
+                                Continue
+                            </button>
+                        </div>
+                    </div>
+                    <!-- INPUT PANEL FOR FRANCHISE TERRITORIES DESKTOP -->
+                    <div id="input-area" class="container-fluid mt-3 p-3 border rounded" style="display: none;">
+                        <div class="row">
+                            <div class="col-12">
+                                <label for="franchisee">Franchisee Number</label>
+                                <input type="text" id="franchisee" class="form-control mb-2" placeholder="Enter Franchisee Number">
+                            </div>
+                            <div class="col-12">
+                                <label>Franchisee Name</label>
+                                <input type="text" id="area-name" class="form-control mb-2" placeholder="Enter Franchisee Name">
+                            </div>
+                            <div class="col-12">
+                                <label for="num-developments">Number of Developments</label>
+                                <input type="number" id="num-developments" class="form-control mb-2" placeholder="Enter number of developments">
+                            </div>
+                            <div class="col-12">
+                                <label for="zip-codes">Zip Codes</label>
+                                <input type="text" id="zip-codes" class="form-control mb-2" placeholder="Enter zip codes">
+                            </div>
+                            <div class="col-12">
+                                <label for="state">State</label>
+                                <input type="text" id="state" class="form-control mb-2" placeholder="Enter state">
+                            </div>
+                            <div class="col-12 mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="color-option me-2" data-color="rgb(0,30,255)">
+                                        <svg viewBox="-30 -26 60 52" height="25px" width="25px" version="1.1">
+                                            <path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(0,30,255,0.3)"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="m-0 fw-bold">Area Development</p>
+                                </div>
+                            </div>
+                            <div class="col-12 d-flex gap-2">
+                                <button id="save-btn" class="btn btn-success flex-grow-1">Save</button>
+                                <button id="save-back" class="btn btn-dark flex-grow-1">Back</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Input Panel for Radial Analysis Desktop -->
+                    <div id="input-area-radial" class="container-fluid p-3 border rounded" style="display: none;">
+                        <div class="row">
+                            <div class="col-12">
+                                <label>Franchisee Number</label>
+                                <input type="text" id="franchise-number-radial" class="form-control mb-2" placeholder="Enter Franchisee Number">
+                            </div>
+                            <div class="col-12">
+                                <label>Franchisee Name</label>
+                                <input type="text" id="area-name-radial" class="form-control mb-2" placeholder="Enter Franchisee Name">
+                            </div>
+                            <div class="col-12">
+                                <label>Address</label>
+                                <input type="text" id="address-radial" class="form-control mb-2" placeholder="Enter Address">
+                            </div>
+
+                            <div class="col-12">
+                                <label>City</label>
+                                <input type="text" id="city-radial" class="form-control mb-2" placeholder="Enter City">
+                            </div>
+                            <div class="col-12">
+                                <label>State</label>
+                                <input type="text" id="state-radial" class="form-control mb-2" placeholder="Enter State">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12 d-flex flex-wrap align-items-center gap-3">
+                                <div class="color-option d-flex align-items-center" data-color="white">
+                                    <svg viewBox="-30 -26 60 52" height="25px" width="25px"><path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(255,255,255,0)"></path></svg>
+                                    <p class="m-0 fw-bold">No Classification</p>
+                                </div>
+                                <div class="color-option d-flex align-items-center" data-color="rgb(0,30,255)">
+                                    <svg viewBox="-30 -26 60 52" height="25px" width="25px"><path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(0,30,255,0.3)"></path></svg>
+                                    <p class="m-0 fw-bold">In Negotiation</p>
+                                </div>
+                                <div class="color-option d-flex align-items-center" data-color="rgb(17,255,0)">
+                                    <svg viewBox="-30 -26 60 52" height="25px" width="25px"><path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(17,255,0,0.3)"></path></svg>
+                                    <p class="m-0 fw-bold">Open</p>
+                                </div>
+                                <div class="color-option d-flex align-items-center" data-color="rgb(255,247,0)">
+                                    <svg viewBox="-30 -26 60 52" height="25px" width="25px"><path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(255,247,0,0.3)"></path></svg>
+                                    <p class="m-0 fw-bold">Under Construction</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12 d-flex flex-column flex-md-row gap-2 w-100">
+                                <button id="save-btn-radial" class="btn btn-success flex-grow-1">Save</button> 
+                                <button id="save-back-radial" class="btn btn-dark flex-grow-1">Back</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Input Panel For Recruitment Analysis Desktop -->
+                    <div id="input-area-recruitment" class="container-fluid" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="recruitmentArea">Franchisee Number</label>
+                                <input type="text" id="recruitmentArea" class="form-control mb-3" placeholder="Enter Franchisee Number">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="area-name-recruitment">Franchisee Name</label>
+                                <input type="text" id="area-name-recruitment" class="form-control mb-3" placeholder="Enter Franchisee Name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="PotStoreCount">Potential Store Count</label>
+                                <input type="number" id="PotStoreCount" class="form-control mb-3" placeholder="Enter Potential Store Count">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="zipCodesRecruitment">Zip Codes</label>
+                                <input type="text" id="zipCodesRecruitment" class="form-control mb-3" placeholder="Enter zip codes">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="stateRecruitment">State</label>
+                                <input type="text" id="stateRecruitment" class="form-control mb-3" placeholder="Enter state">
+                            </div>
+                            <div class="col-md-6">
+                                <label>Category</label>
+                                <form id="categoryForm">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="category" value="Primary Area" id="primary">
+                                        <label class="form-check-label" for="primary">Primary Area</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="category" value="Secondary Area" id="secondary">
+                                        <label class="form-check-label" for="secondary">Secondary Area</label>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="color-option d-flex align-items-center" data-color="rgb(255,247,0)">
+                                    <svg viewBox="-30 -26 60 52" height="25px" width="25px" version="1.1">
+                                        <path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(255,247,0,0.3)"></path>
+                                    </svg>
+                                    <p class="ms-3 fw-bold text-dark">Recruitment Analysis</p>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <div class="row btn-position">
+                            <div class="col-md-6">
+                                <button id="save-btn-recruitment" class="btn btn-success w-100 mb-2">Save Recruitment Area</button>
+                            </div>
+                            <div class="col-md-6">
+                                <button id="save-back-recruitment" class="btn btn-dark w-100">Back</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action View of Franchisee Territories desktop -->
+                    <div id="franchiseViewRight" class="container-fluid" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="section text-center">
+                                    <h3 class="h6 fw-bold mb-2 text-secondary">More data</h3>
+                                    <button class="btn btn-outline-primary w-100 mb-2" id="FranchiseNotes">Notes</button>
+                                </div>
+                            </div>
+                        </div>      
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="section text-center">
+                                    <h3 class="h6 fw-bold mb-2 text-secondary">Reports and Exports</h3>
+                                    <button class="btn btn-outline-secondary w-100 mb-2" id="demographic">Demographic report</button>
+                                    <button class="btn btn-outline-secondary w-100 mb-2" id="DownloadDemographicbreakdown">Download Demographic breakdown</button>
+                                </div>
+                            </div>
+                        </div>  
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="section text-center">
+                                    <h3 class="h6 fw-bold mb-2 text-secondary">Edit</h3>
+                                    <button class="btn btn-outline-secondary w-100 mb-2" id="editAreaBoundry">Edit Area</button>
+                                    <button class="btn btn-outline-secondary w-100 mb-2" id="DeleteLayerButton" data-toggle="modal" data-target="#delet-area" style="background-color: red;">Delete area</button>
+                                </div>
+                            </div>
+                        </div>  
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="section text-center">
+                                    <h3 class="h6 fw-bold mb-2 text-secondary">Go back to Table view</h3>
+                                    <button id="BackToTableFranchise" class="btn btn-outline-dark w-100">Go back</button>
+                                </div>
+                            </div>
+                        </div>  
+                    </div>
+                    <!-- Action View of Radial View Desktop -->
+                    <div id="RadialViewRight" class="container-fluid" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="section text-center">
+                                    <h3 class="h6 fw-bold mb-2 text-secondary">More data</h3>
+                                    <button class="btn btn-outline-primary w-100 mb-2" id="radialNotes">Notes</button>
+                                </div>
+                            </div>
+                        </div>      
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="section text-center">
+                                    <h3 class="h6 fw-bold mb-2 text-secondary">Reports and Exports</h3>
+                                    <button class="btn btn-outline-secondary w-100 mb-2" id="demographicRadial">Demographic report</button>
+                                    <button class="btn btn-outline-secondary w-100 mb-2" id="DownloadDemographicbreakdownRadial">Download Demographic breakdown</button>
+                                </div>
+                            </div>
+                        </div>  
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="section text-center">
+                                    <h3 class="h6 fw-bold mb-2 text-secondary">Edit</h3>
+                                    <button class="btn btn-outline-secondary w-100 mb-2" id="editAreaBoundryRadial">Edit Area</button>
+                                    <button class="btn btn-outline-secondary w-100 mb-2" id="DeleteLayerButtonRadial" data-toggle="modal" data-target="#delet-area" style="background-color: red;">Delete area</button>
+                                </div>
+                            </div>
+                        </div>  
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="section text-center">
+                                    <h3 class="h6 fw-bold mb-2 text-secondary">Go back to Table view</h3>
+                                    <button id="BackToTableRadial" class="btn btn-outline-dark w-100">Go back</button>
+                                </div>
+                            </div>
+                        </div>  
+                    </div>
+                    <!-- Recruitment Analysis Action View for Mobile -->
+                    <div id="RecruitmentViewRight" class="container-fluid" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="section text-center">
+                                    <h3 class="h6 fw-bold mb-2 text-secondary">More data</h3>
+                                    <button class="btn btn-outline-primary w-100 mb-2" id="RecruitmentNotes">Notes</button>
+                                </div>
+                            </div>
+                        </div>      
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="section text-center">
+                                    <h3 class="h6 fw-bold mb-2 text-secondary">Reports and Exports</h3>
+                                    <button class="btn btn-outline-secondary w-100 mb-2" id="demographicRecruitment">Demographic report</button>
+                                    <button class="btn btn-outline-secondary w-100 mb-2" id="DownloadDemographicbreakdownRecruitment">Download Demographic breakdown</button>
+                                </div>
+                            </div>
+                        </div>  
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="section text-center">
+                                    <h3 class="h6 fw-bold mb-2 text-secondary">Edit</h3>
+                                    <button class="btn btn-outline-secondary w-100 mb-2" id="editAreaBoundryRecruitment">Edit Area</button>
+                                    <button class="btn btn-outline-secondary w-100 mb-2" id="DeleteLayerButtonRecruitment" data-toggle="modal" data-target="#delet-area" style="background-color: red;">Delete area</button>
+                                </div>
+                            </div>
+                        </div>  
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="section text-center">
+                                    <h3 class="h6 fw-bold mb-2 text-secondary">Go back to Table view</h3>
+                                    <button id="BackToTableRecruitment" class="btn btn-outline-dark w-100">Go back</button>
+                                </div>
+                            </div>
+                        </div>  
+                    </div>
+                    <!-- Edit Area Modal For Radial Analysis -->
+                    <div data-mdb-input-init class="form-outline container-fluid" id="editradialnumber" style = "display: none;">
+                        <div class="row">
+                            <div class="col-md-12 text-center">
+                                <input min="1" type="number" id="typeNumber" class="form-control mb-2" />
+                                <label class="form-label" for="typeNumber">Number input</label>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12 d-flex flex-wrap align-items-center gap-3">
+                                <div class="color-option d-flex align-items-center" data-color="white">
+                                    <svg viewBox="-30 -26 60 52" height="25px" width="25px"><path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(255,255,255,0)"></path></svg>
+                                    <p class="m-0 fw-bold">No Classification</p>
+                                </div>
+                                <div class="color-option d-flex align-items-center" data-color="rgb(0,30,255)">
+                                    <svg viewBox="-30 -26 60 52" height="25px" width="25px"><path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(0,30,255,0.3)"></path></svg>
+                                    <p class="m-0 fw-bold">In Negotiation</p>
+                                </div>
+                                <div class="color-option d-flex align-items-center" data-color="rgb(17,255,0)">
+                                    <svg viewBox="-30 -26 60 52" height="25px" width="25px"><path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(17,255,0,0.3)"></path></svg>
+                                    <p class="m-0 fw-bold">Open</p>
+                                </div>
+                                <div class="color-option d-flex align-items-center" data-color="rgb(255,247,0)">
+                                    <svg viewBox="-30 -26 60 52" height="25px" width="25px"><path d="M15 26-15 26-30 0-15-26 15-26 30 0Z" stroke="#000000" stroke-width="2" fill="rgba(255,247,0,0.3)"></path></svg>
+                                    <p class="m-0 fw-bold">Under Construction</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 text-center">
+                                <button id="saveBtnForRadius" class="btn btn-success w-100 mb-2">Save</button>
+                                <button id="backFromEditRadial" class="btn btn-dark w-100 mb-2">Back to record memory</button> 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="delet-area" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Are you sure?</h5>
+                    <p>Please confirm</p>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <div class="modal-body p-5">
+                    <p>Are you sure you want to delete this area?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteButton">Delete it</button>
+                </div>
+              </div>
+        </div>
+      </div>
+    <!-- Search Modal -->
+    <div id="searchModal" class="modal1" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
+        <div class="modal-content1 p-4 bg-white rounded shadow-lg" style="max-width: 400px; width: 90%;">
+            <span id="closeModal" class="close d-block text-right" style="cursor: pointer;">&times;</span>
+            <h2 class="text-center">Search Location</h2>
+            <input id="autocomplete1" type="text" class="form-control mb-3" placeholder="Type a location">
+            <button id="searchSubmit" class="btn btn-primary w-100">Submit</button>
+        </div>
+    </div>
+  
+    <!-- Notes Modal -->
+    <div class="modal fade" id="notesModal" tabindex="-1" aria-labelledby="notesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="notesModalLabel">Add Notes</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <textarea id="notesTextarea" class="form-control" rows="5" placeholder="Type your notes here..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="saveNotesBtn">Save</button>
+        </div>
+        </div>
+    </div>
+    </div>
+    <!---- SEARCH POSTAL ADDRESS MODAL----->
+    <div class="modal fade" id="searchModalPostalCode" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content p-3">
+        <div class="modal-header">
+          <h5 class="modal-title">Enter City</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body position-relative">
+          <input type="text" id="autocompleteinputPostalCodes" class="form-control" placeholder="Start typing city..." autocomplete="off" />
+          <div id="suggestions"></div>
+          <div class="loading mt-3">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Fetching postal codes...</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="submitCityBtn" class="btn btn-success">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <script type="module">
+        function loadAppropriateScript() {
+          if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+            import('./static/js/mobile.js')
+              .then(module => {
+                if (typeof module.init === 'function') {
+                  module.init();
+                } else {
+                  console.log('Mobile module loaded, but no init function found');
+                }
+              })
+              .catch(error => {
+                console.error('Failed to load mobile script:', error);
+              });
+          } else {
+            import('./static/js/main.js')
+              .then(module => {
+                if (typeof module.init === 'function') {
+                  module.init();
+                } else {
+                  console.log('Main module loaded, but no init function found');
+                }
+              })
+              .catch(error => {
+                console.error('Failed to load main script:', error);
+              });
+          }
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', loadAppropriateScript);
+        } else {
+          loadAppropriateScript();
+        }
+      </script>
+</body>
+</html>

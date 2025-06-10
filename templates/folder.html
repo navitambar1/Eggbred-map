@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analysis Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #007BFF;
+      color: white;
+    }
+
+    .header button {
+      background-color: white;
+      color: #007BFF;
+      border: none;
+      padding: 8px 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .header button:hover {
+      background-color: #0056b3;
+      color: white;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
+      gap: 10px;
+      padding: 20px;
+      height: calc(100vh - 50px); /* Adjust for header height */
+      box-sizing: border-box;
+    }
+
+    .grid-item {
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .grid-item h2 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    table th, table td {
+      padding: 8px;
+      text-align: left;
+      border: 1px solid #ddd;
+    }
+
+    table th {
+      background-color: #007BFF;
+      color: white;
+    }
+
+    table td {
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">  
+    <h1>Dashboard</h1>
+    <button class="back">Back</button>
+  </div>
+
+  <div class="container">
+    <div class="grid-item">
+      <h2>Area Development</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Franchisee Number</th>
+              <th>Franchisee Name</th>
+              <th>Number Of Developments</th>
+              <th>Population</th>
+              <th>Zip Codes</th>
+              <th>State</th>
+            </tr>
+          </thead>
+          <tbody id="area-development-data">
+            <!-- Data from backend will go here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid-item">
+      <h2>Radial Analysis</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+                <th>Franchisee Number</th>
+                <th>Franchisee Name</th>
+                <th>City</th>
+                <th>State</th>
+                <th>Zip Codes</th>
+                <th>Total Population</th>
+            </tr>
+          </thead>
+          <tbody id="radial-analysis-data">
+            <!-- Data from backend will go here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid-item">
+      <h2>Recruitment Analysis</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+                <th>Franchisee Number</th>
+                <th>Franchisee Name</th>
+                <th>Potential Store Count</th>
+                <th>Population</th>
+                <th>Zip Codes</th>
+                <th>State</th>
+                <th>Demographic link</th>
+            </tr>
+          </thead>
+          <tbody id="recruitment-analysis-data">
+            <!-- Data from backend will go here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script>
+$(".back").click(function(){
+    window.location.href = "/";
+  });
+  async function loadAreaDevelopmentData() {
+    try {
+      const response = await fetch('/load_regions');
+      const data = await response.json();
+
+      if (data.status === 'success') {
+        const regionGroups = data.regionGroups;
+
+        const tableBody = document.getElementById('area-development-data');
+        tableBody.innerHTML = ''; 
+        regionGroups.forEach(group => {
+          const population = group.demographics.population || 'N/A';
+          const zipCodes = group.zipCodes || 'N/A';
+          const state = group.state || 'N/A';
+          const row = `
+            <tr>
+              <td>${group.franchisee}</td>
+              <td>${group.name}</td>
+              <td>${group.numDevelopments}</td>
+              <td>${population}</td>
+              <td>${zipCodes}</td>
+              <td>${state}</td>
+            </tr>
+          `;
+          tableBody.insertAdjacentHTML('beforeend', row);
+        });
+      } else {
+        console.error('Error fetching data:', data.message);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+  async function loadRecruitmentData() {
+    try {
+      const response = await fetch('/load_regions_recruitment');
+      const data = await response.json();
+
+      if (data.status === 'success') {
+        const regionGroups = data.regionGroups;
+
+        const tableBody = document.getElementById('recruitment-analysis-data');
+        tableBody.innerHTML = ''; // Clear existing table data
+        regionGroups.forEach(group => {
+          const population = group.demographics.population || 'N/A';
+          
+          const row = `
+            <tr>
+              <td>${group.recruitmentArea}</td>
+              <td>${group.name}</td>
+              <td>${group.PotStoreCount}</td>
+              <td>${population}</td>
+              <td>${group.zipCodesRecruitment}</td>
+              <td>${group.stateRecruitment}</td>
+            </tr>
+          `;
+          tableBody.insertAdjacentHTML('beforeend', row);
+        });
+      } else {
+        console.error('Error fetching data:', data.message);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+async function loadRadialAnalysisData() {
+    try {
+      const response = await fetch('/get_all_circles');
+      const data = await response.json();
+  
+      if (data.status === 'success') {
+        const circles = Object.values(data.data); 
+        const tableBody = document.getElementById('radial-analysis-data');
+        tableBody.innerHTML = ''; 
+        circles.forEach(circle => {
+          const franchiseeNumber = circle.franchiseeNumber || 'N/A';
+          const name = circle.name || 'N/A';
+          const city = circle.city || 'N/A';
+          const state = circle.state || 'N/A';
+          const zipData = circle.places || 'N/A';
+          const population = circle.demographics ? circle.demographics.population || 'N/A' : 'N/A';
+          const row = `
+            <tr>
+              <td>${franchiseeNumber}</td>
+              <td>${name}</td>
+              <td>${city}</td>
+              <td>${state}</td>
+              <td>${zipData}</td>
+              <td>${population}</td>
+            </tr>
+          `;
+  
+          tableBody.insertAdjacentHTML('beforeend', row);
+        });
+      } else {
+        console.error('Error fetching data:', data.message);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+  
+  function call_data() {
+    loadAreaDevelopmentData();
+    loadRecruitmentData();
+    loadRadialAnalysisData();
+  }
+  window.onload = call_data;
+</script>

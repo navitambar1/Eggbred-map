@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Monthly Egg - Newsletter Archive</title>
+    <link rel="stylesheet" href="static/css/newsletter.css">
+    <style>
+
+</style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>The Monthly Egg</h1>
+            <div class="admin-controls">
+                <button class="admin-btn" onclick="toggleAdminMode()">Admin Mode</button>
+                <button class="admin-btn" onclick="addNewYear()">Add Year</button>
+            </div>
+        </div>        
+        <div class="newsletter-grid" id="newsletterGrid">
+            <!-- Year columns will be dynamically generated -->
+        </div>
+    </div>
+    <!-- Add Newsletter Modal -->
+    <div id="newsletterModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle">Add Newsletter</h3>
+            <form id="newsletterForm">
+                <div class="form-group">
+                    <label for="newsletterMonth">Month:</label>
+                    <select id="newsletterMonth" required>
+                        <option value="">Select Month</option>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="newsletterDay">Day:</label>
+                    <input type="number" id="newsletterDay" min="1" max="31" required>
+                </div>
+                <div class="form-group">
+                    <label for="newsletterUrl">URL:</label>
+                    <input type="url" id="newsletterUrl" placeholder="https://example.com/newsletter.pdf" required>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Add Year Modal -->
+    <div id="yearModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeYearModal()">&times;</span>
+            <h3>Add New Year</h3>
+            <form id="yearForm">
+                <div class="form-group">
+                    <label for="newYear">Year:</label>
+                    <input type="number" id="newYear" min="2025" max="2050" required>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">Add Year</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeYearModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="static/js/newsletter.js"></script>
+</body>
+</html>
